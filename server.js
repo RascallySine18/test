@@ -3,10 +3,11 @@ const cors = require('cors');
 const axios = require('axios');
 
 const app = express();
-app.use(cors()); // Разрешаем запросы с вашего сайта
+app.use(cors());
 app.use(express.json());
 
-const BOT_TOKEN = '8401172204:AAHODSNpYjLa-9K162iyhNyDU6nYtfNVH1E';
+// Берем токен из настроек Render, которые вы заполнили выше
+const BOT_TOKEN = process.env.TELEGRAM_TOKEN;
 
 app.get('/send', async (req, res) => {
     const { chatId, text } = req.query;
@@ -18,10 +19,9 @@ app.get('/send', async (req, res) => {
         });
         res.send({ status: 'ok' });
     } catch (error) {
-        console.error('Error sending to TG:', error.message);
         res.status(500).send({ status: 'error' });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server is live!`));
