@@ -7,21 +7,18 @@ app.use(cors());
 app.use(express.json());
 
 const BOT_TOKEN = process.env.TELEGRAM_TOKEN;
-const YOUR_SITE_URL = 'https://rascallysine18.github.io/tictactoe'; // Укажите адрес вашей игры
-const RENDER_URL = `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`; // Авто-определение вашего URL на Render
+const YOUR_SITE_URL = 'https://rascallysine18.github.io/tictactoe/'; // ЗАМЕНИТЕ НА СВОЙ
+const RENDER_URL = `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`;
 
-// ФУНКЦИЯ АВТО-НАСТРОЙКИ WEBHOOK
+// Авто-настройка вебхука при запуске
 async function initWebhook() {
     try {
-        const url = `https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${RENDER_URL}/webhook`;
-        const response = await axios.get(url);
-        console.log('Webhook Status:', response.data.description);
-    } catch (e) {
-        console.error('Webhook Error:', e.message);
-    }
+        await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${RENDER_URL}/webhook`);
+        console.log('Webhook успешно установлен');
+    } catch (e) { console.log('Ошибка вебхука:', e.message); }
 }
 
-// 1. ПРОКСИ ДЛЯ ОТПРАВКИ (из игры)
+// Прокси для отправки из игры
 app.get('/send', async (req, res) => {
     const { chatId, text } = req.query;
     try {
@@ -29,34 +26,33 @@ app.get('/send', async (req, res) => {
             params: { chat_id: chatId, text: text }
         });
         res.send({ status: 'ok' });
-    } catch (error) {
-        res.status(500).send({ status: 'error' });
-    }
+    } catch (e) { res.status(500).send({ status: 'error' }); }
 });
 
-// 2. WEBHOOK (для входа через бота)
+// Обработка сообщений бота
 app.post('/webhook', async (req, res) => {
     try {
         const { message } = req.body;
-        if (message && message.text && message.text.startsWith('/start')) {
+        if (message && message.text && message.text.includes('/start')) {
             const chatId = message.chat.id;
             const authUrl = `${YOUR_SITE_URL}?id=${chatId}`;
 
             await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 chat_id: chatId,
-                text: `Привет! Нажми на кнопку для входа:`,
+                text: `Добро пожаловать! Нажмите кнопку ниже для автоматического входа в игру:`,
                 reply_markup: {
-                    inline_keyboard: [[{ text: "Начать игру 🚀", url: authUrl }]]
+                    inline_keyboard: [[
+                        { text: "Войти в игру 🎮", url: authUrl }
+                    ]]
                 }
             });
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error('Ошибка в обработке сообщения:', e.message); }
     res.sendStatus(200);
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
-    console.log(`Server running on port ${PORT}`);
-    // Запускаем настройку вебхука автоматически при старте сервера
+    console.log('Сервер запущен');
     await initWebhook();
 });
