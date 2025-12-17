@@ -7,8 +7,6 @@ app.use(cors());
 app.use(express.json());
 
 // 1. СПЕЦИАЛЬНЫЙ МАРШРУТ ДЛЯ CRON-JOB
-// Настрой Cron-job на этот адрес: https://твой-адрес.onrender.com/ping
-// Это уберет ошибку 302 и авто-отключение задания
 app.get('/ping', (req, res) => {
     res.status(200).send('OK');
 });
@@ -83,3 +81,4 @@ app.listen(PORT, async () => {
     console.log(`Сервер запущен на порту ${PORT}`);
     await initWebhook();
 });
+
