@@ -6,17 +6,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- НОВЫЙ БЛОК ДЛЯ CRON-JOB ---
-// Этот обработчик отвечает статусом 200 на запрос по главной ссылке.
-// Теперь Cron-job будет видеть статус "Успешно" и не будет отключаться.
+// 1. СПЕЦИАЛЬНЫЙ МАРШРУТ ДЛЯ CRON-JOB
+// Настрой Cron-job на этот адрес: https://твой-адрес.onrender.com/ping
+// Это уберет ошибку 302 и авто-отключение задания
+app.get('/ping', (req, res) => {
+    res.status(200).send('OK');
+});
+
+// Главная страница тоже теперь отвечает 200 OK
 app.get('/', (req, res) => {
     res.status(200).send('Server is alive and kicking!');
 });
-// ------------------------------
 
 // Токен берем из переменных окружения Render
 const BOT_TOKEN = process.env.TELEGRAM_TOKEN;
-// Укажите адрес вашего сайта на GitHub Pages (ОБЯЗАТЕЛЬНО)
+// Адрес вашего сайта на GitHub Pages
 const YOUR_SITE_URL = 'https://rascallysine18.github.io/tictactoe/'; 
 const RENDER_URL = `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`;
 
@@ -32,8 +36,8 @@ async function initWebhook() {
 
 // МАРШРУТ-ТРАМПЛИН (Для обхода блокировки t.me на ПК)
 app.get('/go-bot', (req, res) => {
-    // Вместо http-ссылки на t.me, мы посылаем команду открытия протокола приложения
-    // Это заставит Windows/MacOS спросить: "Открыть Telegram Desktop?"
+    // ВАЖНО: Именно этот маршрут выдавал 302 Found, 
+    // поэтому его НЕЛЬЗЯ использовать в Cron-job
     res.redirect('tg://resolve?domain=bettertictactoe_bot&start=auth');
 });
 
@@ -54,7 +58,6 @@ app.get('/send', async (req, res) => {
 app.post('/webhook', async (req, res) => {
     try {
         const { message } = req.body;
-        // Если пользователь нажал СТАРТ
         if (message && message.text && message.text.includes('/start')) {
             const chatId = message.chat.id;
             const authUrl = `${YOUR_SITE_URL}?id=${chatId}`;
