@@ -6,6 +6,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// --- НОВЫЙ БЛОК ДЛЯ CRON-JOB ---
+// Этот обработчик отвечает статусом 200 на запрос по главной ссылке.
+// Теперь Cron-job будет видеть статус "Успешно" и не будет отключаться.
+app.get('/', (req, res) => {
+    res.status(200).send('Server is alive and kicking!');
+});
+// ------------------------------
+
 // Токен берем из переменных окружения Render
 const BOT_TOKEN = process.env.TELEGRAM_TOKEN;
 // Укажите адрес вашего сайта на GitHub Pages (ОБЯЗАТЕЛЬНО)
